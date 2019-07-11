@@ -235,7 +235,22 @@ static int isotp_send_fc(struct sock *sk, int ae, u8 flowstatus)
 	skb_put(nskb, so->ll.mtu);
 
 	/* create & send flow control reply */
-	ncf->can_id = so->txid;
+    if(so->txid == 0x7DF)
+    {
+        __u32 txid = 0x7E0;
+        txid |= (so->rxid & 0x7);
+        ncf->can_id = txid;
+    }
+    else if(so->txid == (0x18DB33F1 | CAN_EFF_FLAG))
+    {
+        __u32 txid = 0x18DA00F1 | CAN_EFF_FLAG;
+        txid |= (so->rxid & 0xFF) << 8;
+        ncf->can_id = txid;
+    }
+    else
+    {
+        ncf->can_id = so->txid;
+    }
 
 	if (so->opt.flags & CAN_ISOTP_TX_PADDING) {
 		memset(ncf->data, so->opt.txpad_content, CAN_MAX_DLEN);
